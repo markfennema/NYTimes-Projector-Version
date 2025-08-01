@@ -25,6 +25,11 @@
             overflow: hidden !important;
         }
 
+        /* Disable only page-level vertical scrolling in projector mode */
+        .projector-mode {
+            overflow-y: hidden !important;
+        }
+
         /* Hide everything in projector mode */
         .projector-mode * {
             visibility: hidden !important;
@@ -39,12 +44,24 @@
         .projector-mode .xwd__clue-list--list *,
         .projector-mode #projector-toggle-btn,
         .projector-mode .pause-modal,
-        .projector-mode .pause-modal * {
+        .projector-mode .pause-modal *,
+        .projector-mode [class*="modal"],
+        .projector-mode [class*="modal"] *,
+        .projector-mode [class*="overlay"],
+        .projector-mode [class*="overlay"] *,
+        .projector-mode [class*="dialog"],
+        .projector-mode [class*="dialog"] *,
+        .projector-mode [role="dialog"],
+        .projector-mode [role="dialog"] * {
             visibility: visible !important;
         }
 
-        /* Ensure pause modal stays on top */
-        .projector-mode .pause-modal {
+        /* Ensure modals stay on top */
+        .projector-mode .pause-modal,
+        .projector-mode [class*="modal"],
+        .projector-mode [class*="overlay"],
+        .projector-mode [class*="dialog"],
+        .projector-mode [role="dialog"] {
             z-index: 99999 !important;
         }
 
@@ -57,7 +74,7 @@
             height: 67% !important;
             background: #fff !important;
             border: 3px solid #000 !important;
-            padding: 20px !important;
+            padding: 5px !important;
             box-sizing: border-box !important;
             z-index: 10000 !important;
         }
@@ -71,21 +88,21 @@
             height: 33% !important;
             background: #fff !important;
             border: 3px solid #000 !important;
-            padding: 20px !important;
+            padding: 5px !important;
             box-sizing: border-box !important;
             overflow-y: auto !important;
             z-index: 10000 !important;
             
             /* 8-column layout for denser horizontal space usage */
             column-count: 8 !important;
-            column-gap: 15px !important;
+            column-gap: 0px !important;
             column-fill: auto !important;
         }
 
         /* Prevent clue items from breaking across columns */
         .projector-mode .xwd__clue-list--wrapper:nth-child(1) .xwd__clue--li {
             break-inside: avoid !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 2px !important;
             display: block !important;
         }
 
@@ -98,21 +115,21 @@
             height: 67% !important;
             background: #fff !important;
             border: 3px solid #000 !important;
-            padding: 20px !important;
+            padding: 5px !important;
             box-sizing: border-box !important;
             overflow-y: auto !important;
             z-index: 10000 !important;
             
             /* 5-column layout for Down clues */
             column-count: 5 !important;
-            column-gap: 20px !important;
+            column-gap: 0px !important;
             column-fill: auto !important;
         }
 
         /* Prevent Down clue items from breaking across columns */
         .projector-mode .xwd__clue-list--wrapper:nth-child(2) .xwd__clue--li {
             break-inside: avoid !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 2px !important;
             display: block !important;
         }
 
