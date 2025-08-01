@@ -14,7 +14,7 @@
 (function() {
     'use strict';
 
-    let projectorModeEnabled = GM_getValue('projectorMode', false);
+    let projectorModeEnabled = GM_getValue('projectorMode', true);
     let controlPanel = null;
 
     // Simple projector mode styles - reposition elements in place
@@ -30,24 +30,30 @@
             visibility: hidden !important;
         }
 
-        /* Show only the crossword elements and control panel */
+        /* Show only the crossword elements, control panel, and pause modal */
         .projector-mode .xwd__board--content,
         .projector-mode .xwd__board--content *,
         .projector-mode .xwd__clue-list--wrapper,
         .projector-mode .xwd__clue-list--wrapper *,
         .projector-mode .xwd__clue-list--list,
         .projector-mode .xwd__clue-list--list *,
-        .projector-mode #projector-control-panel,
-        .projector-mode #projector-control-panel * {
+        .projector-mode #projector-toggle-btn,
+        .projector-mode .pause-modal,
+        .projector-mode .pause-modal * {
             visibility: visible !important;
         }
 
-        /* Position board content in top-left two thirds */
+        /* Ensure pause modal stays on top */
+        .projector-mode .pause-modal {
+            z-index: 99999 !important;
+        }
+
+        /* Position board content in top-left area (now 40% width) */
         .projector-mode .xwd__board--content {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            width: 67% !important;
+            width: 40% !important;
             height: 67% !important;
             background: #fff !important;
             border: 3px solid #000 !important;
@@ -56,7 +62,7 @@
             z-index: 10000 !important;
         }
 
-        /* Position first clue list (Across) across bottom third */
+        /* Position first clue list (Across) across bottom third with 8 columns */
         .projector-mode .xwd__clue-list--wrapper:nth-child(1) .xwd__clue-list--list {
             position: fixed !important;
             bottom: 0 !important;
@@ -70,9 +76,9 @@
             overflow-y: auto !important;
             z-index: 10000 !important;
             
-            /* 5-column layout for horizontal space efficiency */
-            column-count: 5 !important;
-            column-gap: 20px !important;
+            /* 8-column layout for denser horizontal space usage */
+            column-count: 8 !important;
+            column-gap: 15px !important;
             column-fill: auto !important;
         }
 
@@ -83,12 +89,12 @@
             display: block !important;
         }
 
-        /* Position second clue list (Down) across right third */
+        /* Position second clue list (Down) in expanded right sidebar with 3 columns */
         .projector-mode .xwd__clue-list--wrapper:nth-child(2) .xwd__clue-list--list {
             position: fixed !important;
             top: 0 !important;
             right: 0 !important;
-            width: 33% !important;
+            width: 60% !important;
             height: 67% !important;
             background: #fff !important;
             border: 3px solid #000 !important;
@@ -96,111 +102,61 @@
             box-sizing: border-box !important;
             overflow-y: auto !important;
             z-index: 10000 !important;
+            
+            /* 5-column layout for Down clues */
+            column-count: 5 !important;
+            column-gap: 20px !important;
+            column-fill: auto !important;
         }
 
-        /* Control Panel Styles */
-        #projector-control-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 99999;
-            background: white;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-family: Arial, sans-serif;
-            min-width: 200px;
+        /* Prevent Down clue items from breaking across columns */
+        .projector-mode .xwd__clue-list--wrapper:nth-child(2) .xwd__clue--li {
+            break-inside: avoid !important;
+            margin-bottom: 8px !important;
+            display: block !important;
         }
 
-        #projector-control-panel h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            color: #333;
+        /* Minimal Projector Toggle Button */
+        #projector-toggle-btn {
+            position: fixed !important;
+            top: 10px !important;
+            right: 10px !important;
+            z-index: 99999 !important;
+            width: 40px !important;
+            height: 40px !important;
+            background: transparent !important;
+            border: 2px solid rgba(255,255,255,0.8) !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 24px !important;
+            visibility: visible !important;
+            backdrop-filter: blur(10px) !important;
         }
 
-        #projector-control-panel button {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        #projector-control-panel .toggle-btn {
-            background-color: #1976d2;
-            color: white;
-        }
-
-        #projector-control-panel .toggle-btn:hover {
-            background-color: #1565c0;
-        }
-
-        #projector-control-panel .toggle-btn.active {
-            background-color: #f44336;
-        }
-
-        #projector-control-panel .toggle-btn.active:hover {
-            background-color: #d32f2f;
-        }
-
-        #projector-control-panel .export-btn {
-            background-color: #4caf50;
-            color: white;
-        }
-
-        #projector-control-panel .export-btn:hover {
-            background-color: #45a049;
-        }
-
-        #projector-control-panel .status {
-            text-align: center;
-            font-size: 12px;
-            color: #666;
-            margin: 8px 0;
-        }
-
-        #projector-control-panel .export-section {
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-
-        #projector-control-panel .export-title {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
+        #projector-toggle-btn:hover {
+            background: rgba(255,255,255,0.1) !important;
+            transform: scale(1.05) !important;
+            border-color: rgba(255,255,255,1) !important;
         }
     `;
 
     GM_addStyle(projectorStyles);
 
     function createControlPanel() {
-        controlPanel = document.createElement('div');
-        controlPanel.id = 'projector-control-panel';
-        controlPanel.innerHTML = `
-            <h3>Projector Mode</h3>
-            <button id="toggle-projector" class="toggle-btn">Enable Projector Mode</button>
-            <div id="projector-status" class="status">Projector mode is off</div>
-            
-            <div class="export-section">
-                <div class="export-title">Debug Export</div>
-                <button id="screenshot-guide" class="export-btn">Screenshot Guide</button>
-                <button id="export-dom" class="export-btn">Export DOM Source</button>
-            </div>
-        `;
+        controlPanel = document.createElement('button');
+        controlPanel.id = 'projector-toggle-btn';
+        controlPanel.innerHTML = projectorModeEnabled ? '📺' : '🎬';
+        controlPanel.title = projectorModeEnabled ? 'Disable Projector Mode' : 'Enable Projector Mode';
+        controlPanel.className = projectorModeEnabled ? 'active' : 'inactive';
         
         document.body.appendChild(controlPanel);
         
-        // Add event listeners
-        document.getElementById('toggle-projector').addEventListener('click', toggleProjectorMode);
-        document.getElementById('screenshot-guide').addEventListener('click', showScreenshotGuide);
-        document.getElementById('export-dom').addEventListener('click', exportDOMSource);
-        
-        updateControlPanelUI();
+        // Add event listener
+        controlPanel.addEventListener('click', toggleProjectorMode);
     }
 
     function toggleProjectorMode() {
@@ -238,7 +194,8 @@
         
         // Simply add the CSS class - elements stay in their original DOM positions
         document.body.classList.add('projector-mode');
-        console.log('Projector mode enabled - elements repositioned via CSS');
+        console.log('✅ Projector mode enabled - elements repositioned via CSS');
+        console.log('Body classes:', document.body.classList.toString());
     }
 
     function disableProjectorMode() {
@@ -250,94 +207,11 @@
     function updateControlPanelUI() {
         if (!controlPanel) return;
         
-        const toggleBtn = document.getElementById('toggle-projector');
-        const status = document.getElementById('projector-status');
-        
-        if (projectorModeEnabled) {
-            toggleBtn.textContent = 'Disable Projector Mode';
-            toggleBtn.classList.add('active');
-            status.textContent = 'Projector mode is on';
-        } else {
-            toggleBtn.textContent = 'Enable Projector Mode';
-            toggleBtn.classList.remove('active');
-            status.textContent = 'Projector mode is off';
-        }
+        controlPanel.innerHTML = projectorModeEnabled ? '📺' : '🎬';
+        controlPanel.title = projectorModeEnabled ? 'Disable Projector Mode' : 'Enable Projector Mode';
+        controlPanel.className = projectorModeEnabled ? 'active' : 'inactive';
     }
 
-    function showScreenshotGuide() {
-        alert(`Screenshot Guide:
-
-1. Enable Projector Mode
-2. Use Cmd+Shift+4 to capture the crossword area
-3. Screenshot saves to Desktop automatically
-4. Run: ./pull-exports.sh to move it to project folder
-
-Then Claude can see your exact layout!`);
-    }
-
-    function exportDOMSource() {
-        const btn = document.getElementById('export-dom');
-        btn.textContent = 'Exporting...';
-        btn.disabled = true;
-        
-        try {
-            const domInfo = {
-                timestamp: new Date().toISOString(),
-                url: window.location.href,
-                title: document.title,
-                crosswordElements: extractCrosswordElements(),
-                fullHTML: document.documentElement.outerHTML
-            };
-            
-            const jsonData = JSON.stringify(domInfo, null, 2);
-            const blob = new Blob([jsonData], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            
-            // Create download link
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'nyt-crossword-source.json';
-            a.click();
-            
-            btn.textContent = 'DOM Exported!';
-            setTimeout(() => {
-                btn.textContent = 'Export DOM Source';
-                btn.disabled = false;
-            }, 2000);
-        } catch (error) {
-            console.error('Export error:', error);
-            btn.textContent = 'Error';
-            setTimeout(() => {
-                btn.textContent = 'Export DOM Source';
-                btn.disabled = false;
-            }, 2000);
-        }
-    }
-
-    function extractCrosswordElements() {
-        const elements = {};
-        
-        const selectors = [
-            '.xwd__board--content',
-            '.xwd__clue-list--list',
-            '.pz-game-board',
-            '.pz-game-clues'
-        ];
-        
-        selectors.forEach(selector => {
-            const found = document.querySelectorAll(selector);
-            if (found.length > 0) {
-                elements[selector] = Array.from(found).map(el => ({
-                    tagName: el.tagName,
-                    className: el.className,
-                    id: el.id,
-                    textContent: el.textContent?.substring(0, 100)
-                }));
-            }
-        });
-        
-        return elements;
-    }
 
     // Initialize when page loads
     function init() {
@@ -352,10 +226,17 @@ Then Claude can see your exact layout!`);
                 console.log('✅ Found crossword elements, creating control panel');
                 createControlPanel();
                 
-                // Apply saved projector mode state
-                if (projectorModeEnabled) {
+                // Force projector mode on by default
+                console.log('🎬 Starting projector mode by default');
+                projectorModeEnabled = true;
+                GM_setValue('projectorMode', true);
+                
+                // Add a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    console.log('🎬 Enabling projector mode after delay');
                     enableProjectorMode();
-                }
+                    updateControlPanelUI();
+                }, 100);
             }
         }, 500);
         
